@@ -170,20 +170,20 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")-> byte
     pdf_bytes = pdf.output(dest='S').encode("latin1")
     return pdf_bytes
 
-def displayPDF(pdf_bytes):
+def displayPDF(pdf_bytes,jenis="Pendaftaran"):
+    text = "Pendaftaran" if jenis == "Pendaftaran" else "Pengunduran Diri"
+
     # Mengonversi PDF ke base64
     pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
     download_button = st.download_button(
         label="Download PDF",
         data=pdf_bytes,
-        file_name="form.pdf",
+        file_name=f"{text}.pdf",
         mime="application/pdf",
     )
 
-    # Menampilkan PDF di Streamlit
-    # mengakali agar tidak diblokir browser ketika menampilkan pdf dengan js
-
+    # Menampilkan PDF di Streamlit sebagai gambar
     st.markdown(f'<embed src="data:application/pdf;base64,{pdf_base64}" width="100%" height="800" type="application/pdf">',
                 unsafe_allow_html=True)
 
@@ -260,7 +260,7 @@ def pendaftaran_fans():
     button = st.checkbox("Tampilkan PDF", value = False)
     if button:
         pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
-        displayPDF(pdf_file)
+        displayPDF(pdf_file,jenis="Pendaftaran")
 
 
 def pengunduran_diri_fans():
@@ -275,18 +275,12 @@ def pengunduran_diri_fans():
 
     alasan = st.text_area('Alasan')
     pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pengunduran Diri")
-    def save_pdf_to_buffer(pdf):
-        buffer = io.BytesIO()
-        # Write PDF ke buffer
-        buffer.write(pdf)
-        buffer.seek(0)
-        return buffer
 
     # Menampilkan PDF di Streamlit sebagai gambar
     button1 = st.checkbox("Tampilkan PDF ", value = False)
     if button1:
         pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
-        displayPDF(pdf_file)
+        displayPDF(pdf_file,jenis="Pengunduran Diri")
 
 page1 = st.Page(page=about, title='Tentang Web App')
 page2 = st.Page(page=simulator, title='Simulator Skor')
