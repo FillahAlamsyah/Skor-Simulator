@@ -174,6 +174,19 @@ def displayPDF(pdf_bytes):
     # Mengonversi PDF ke base64
     pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
+    download_button = st.download_button(
+        label="Download PDF",
+        data=pdf_bytes,
+        file_name="form.pdf",
+        mime="application/pdf",
+    )
+
+    # Menampilkan PDF di Streamlit
+    # mengakali agar tidak diblokir browser ketika menampilkan pdf dengan js
+
+    st.markdown(f'<embed src="data:application/pdf;base64,{pdf_base64}" width="100%" height="800" type="application/pdf">',
+                unsafe_allow_html=True)
+
     # Membuat file HTML untuk menampilkan PDF
     html_content = f"""
     <!DOCTYPE html>
