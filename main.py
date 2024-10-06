@@ -193,6 +193,8 @@ def displayPDF(pdf_bytes,jenis="Pendaftaran"):
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://ssl.gstatic.com data:; frame-src 'self' https://skor-simulator.streamlit.app/; style-src 'self' 'unsafe-inline'; script-src 'self' https://somedomain.com 'unsafe-inline' 'unsafe-eval'; media-src *;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; frame-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PDF Viewer</title>
         <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
