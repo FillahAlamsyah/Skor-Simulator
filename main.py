@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 #import html
-#import uuid
-import io, requests, urllib.request
+#import 
+from io import BytesIO
+import io, base64, urllib.request
 from fpdf import FPDF
 from pdf2image import convert_from_bytes
 from streamlit_pdf_viewer import pdf_viewer
@@ -45,9 +46,7 @@ def about():
 def read_data(file,sheet_name='Sheet1'):
     data = pd.read_excel(file,sheet_name=sheet_name)
     return data
-if 'df' not in st.session_state:
-    st.session_state.df = read_data('EPL_Data.xlsx')
-df = st.session_state.df
+df = read_data('EPL_Data.xlsx')
 # nama_lengkap_klub = ['Liverpool',
 #                         'Manchester City',
 #                         'Arsenal',
@@ -129,14 +128,10 @@ def simulator():
     scorer_cols[1].markdown(f"<div style='text-align: center; font-size: 2.5rem; margin-top: 1.25rem;'>⚽️</div>", unsafe_allow_html=True)
     scorer_cols[2].markdown(f"<div style='text-align: center; font-size: 1.2; margin-top: 1.25rem;'>{goal_scorer2}</div>", unsafe_allow_html=True)
 
-    # Save to Image this page
-    #st.subheader('Simpan Skor',divider=True)
-    # Tambahkan tombol untuk mengunduh gambar
-    #add_reportgen_button()
 
 
-
-def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran") -> bytes:
+#@st.cache_resource
+def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran"):
     text = "Pendaftaran" if jenis == "Pendaftaran" else "Pengunduran Diri"
     pdf = FPDF(format='A4', unit='mm')
     pdf.add_page()
@@ -164,16 +159,27 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran") -> byt
 
     #tanda tangani
     pdf.ln(10)
-    waktu = "Di Tempat, " + pd.Timestamp.now().strftime("%d %B %Y")
+    waktu = "Di Tempat, "
     pdf.set_x(-pdf.get_string_width(waktu) - 60)
     pdf.cell(0, 10, f"{waktu}", ln=True, align='R')
     pdf.ln(20)
     pdf.set_x(-pdf.get_string_width("TTD") - 60)
     pdf.cell(0, 10, "TTD", ln=True, align='C')
 
-    # Simpan PDF
-    pdf_file = pdf.output(dest='S').encode("latin1")
-    return pdf_file
+    # Simpan PDF ke BytesIO
+    pdf_output = BytesIO()
+    pdf.output(pdf_output, dest='S').encode('latin1')  # Menyimpan ke buffer sebagai string PDF
+    pdf_output.seek(0)  # Kembali ke awal buffer
+
+    return pdf_output
+def displayPDF(pdf_file):
+    # Membaca PDF dari BytesIO dan mengkonversi ke base64
+    base64_pdf = base64.b64encode(pdf_file.read()).decode('utf-8')
+
+    # Menampilkan PDF dalam iframe di Streamlit
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
 
 def pendaftaran_fans():
     st.header('Pendaftaran Fans')
@@ -187,27 +193,13 @@ def pendaftaran_fans():
 
     alasan = st.text_area('Alasan')
 
-    pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
-    def save_pdf_to_buffer(pdf):
-        buffer = io.BytesIO()
-        # Write PDF ke buffer
-        buffer.write(pdf)
-        buffer.seek(0)
-        return buffer
-
     # Menampilkan PDF di Streamlit sebagai gambar
-    if st.checkbox("Tampilkan PDF",value = False):
-        pdf_viewer(input=pdf_file, render_text=True)
-        # Simpan ke buffer
-        buffer = save_pdf_to_buffer(pdf_file)
-        # Menampilkan PDF dengan opsi unduh
-        st.download_button(
-            label="Download PDF",
-            data=buffer,
-            file_name=f"{nama}_registration.pdf",
-            mime="application/pdf"
-        )
-
+    button = st.checkbox("Tampilkan PDF", value = False)
+    if button and nama and klub :
+        
+        pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
+        displayPDF(pdf_file)
+        #pdf_viewer(input=pdf_file, render_text=True)
 
 
 def pengunduran_diri_fans():
@@ -230,7 +222,8 @@ def pengunduran_diri_fans():
         return buffer
 
     # Menampilkan PDF di Streamlit sebagai gambar
-    if st.checkbox("Tampilkan PDF ",value = False):
+    button1 = st.checkbox("Tampilkan PDF ", value = False)
+    if button1:
         pdf_viewer(input=pdf_file, render_text=True)
         # Simpan ke buffer
         buffer = save_pdf_to_buffer(pdf_file)
