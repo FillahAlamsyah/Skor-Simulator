@@ -6,7 +6,11 @@ from PIL import Image
 import io, base64, urllib.request
 from fpdf import FPDF
 from streamlit_pdf_viewer import pdf_viewer
-#
+
+from pdf2image import convert_from_path # pdf2image untuk mengkonversi PDF ke gambar
+from pdf2image.exceptions import PDFPageCountError # Exception untuk penanganan error
+
+
 st.set_page_config(page_title='Skor Simulator', page_icon=':soccer:', layout='centered', initial_sidebar_state='expanded')
 
 def about():
@@ -187,11 +191,6 @@ def displayPDF(pdf_bytes, jenis="Pendaftaran"):
         file_name=f"{text}.pdf",
         mime="application/pdf",
     )
-
-    # using plotly to display pdf
-    import plotly.express as px
-    fig = px.imshow(Image.open(BytesIO(pdf_bytes)))
-    st.plotly_chart(fig)
 
     # Membuat konten HTML untuk menampilkan PDF dalam iframe
     html_content = f"""

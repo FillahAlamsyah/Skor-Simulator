@@ -6,5 +6,6 @@ openpyxl
 Pillow
 wand
 streamlit-pdf-viewer
-plotly
+PyMuPDF==1.18.19
 pdf2image
+pdfplumber
