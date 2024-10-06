@@ -4,3 +4,4 @@ fpdf
 openpyxl
 Pillow
 wand
+streamlit-pdf-viewer
