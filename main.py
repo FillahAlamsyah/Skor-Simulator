@@ -38,9 +38,9 @@ def about():
     st.subheader('Referensi Gambar')
     st.markdown("[Postingan Threads](https://www.threads.net/@abbkusman_/post/C_0Q8qfspTr?xmt=AQGz-ygaEFsELioTBr2CoTBHXSloQPPbDl_WWkizYOzZlQ)")
 
-    st.image('sources\MU-Southampton.jpeg', caption='Threads', use_column_width=True)
+    #st.image('sources\MU-Southampton.jpeg', caption='Threads', use_column_width=True)
     st.markdown("[Post On Instagram](https://www.instagram.com/p/DAiJA0hSZu4/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)")
-    st.image('sources\Surat-Pengunduran-Diri.jpeg', caption='Postingan Instagram', use_column_width=True)
+    #st.image('sources\Surat-Pengunduran-Diri.jpeg', caption='Postingan Instagram', use_column_width=True)
 @st.cache_data
 def read_data(file,sheet_name='Sheet1'):
     data = pd.read_excel(file,sheet_name=sheet_name)
@@ -196,16 +196,17 @@ def pendaftaran_fans():
         return buffer
 
     # Menampilkan PDF di Streamlit sebagai gambar
-    pdf_viewer(input=pdf_file, render_text=True)
-    # Simpan ke buffer
-    buffer = save_pdf_to_buffer(pdf_file)
-    # Menampilkan PDF dengan opsi unduh
-    st.download_button(
-        label="Download PDF",
-        data=buffer,
-        file_name=f"{nama}_registration.pdf",
-        mime="application/pdf"
-    )
+    if st.checkbox("Tampilkan PDF",value = False):
+        pdf_viewer(input=pdf_file, render_text=True)
+        # Simpan ke buffer
+        buffer = save_pdf_to_buffer(pdf_file)
+        # Menampilkan PDF dengan opsi unduh
+        st.download_button(
+            label="Download PDF",
+            data=buffer,
+            file_name=f"{nama}_registration.pdf",
+            mime="application/pdf"
+        )
 
 
 
@@ -229,16 +230,17 @@ def pengunduran_diri_fans():
         return buffer
 
     # Menampilkan PDF di Streamlit sebagai gambar
-    pdf_viewer(input=pdf_file, render_text=True)
-    # Simpan ke buffer
-    buffer = save_pdf_to_buffer(pdf_file)
-    # Menampilkan PDF dengan opsi unduh
-    st.download_button(
-        label="Download PDF",
-        data=buffer,
-        file_name=f"{nama}_resignation.pdf",
-        mime="application/pdf"
-    )
+    if st.checkbox("Tampilkan PDF ",value = False):
+        pdf_viewer(input=pdf_file, render_text=True)
+        # Simpan ke buffer
+        buffer = save_pdf_to_buffer(pdf_file)
+        # Menampilkan PDF dengan opsi unduh
+        st.download_button(
+            label="Download PDF",
+            data=buffer,
+            file_name=f"{nama}_resignation.pdf",
+            mime="application/pdf"
+        )
 
 page1 = st.Page(page=about, title='Tentang Web App')
 page2 = st.Page(page=simulator, title='Simulator Skor')
