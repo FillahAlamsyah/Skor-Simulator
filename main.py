@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-#import html
-#import 
+import tempfile
 from io import BytesIO
 import io, base64, urllib.request
 from fpdf import FPDF
@@ -166,19 +165,20 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran"):
     pdf.set_x(-pdf.get_string_width("TTD") - 60)
     pdf.cell(0, 10, "TTD", ln=True, align='C')
 
-    # Simpan PDF ke BytesIO
-    pdf_output = BytesIO()
-    pdf.output(pdf_output, dest='S').encode('latin1')  # Menyimpan ke buffer sebagai string PDF
-    pdf_output.seek(0)  # Kembali ke awal buffer
+    # Simpan PDF di file sementara
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+    pdf.output(temp_file.name)
+    return temp_file.name
 
-    return pdf_output
-def displayPDF(pdf_file):
-    # Membaca PDF dari BytesIO dan mengkonversi ke base64
-    base64_pdf = base64.b64encode(pdf_file.read()).decode('utf-8')
+def displayPDF(file_path):
+    # Membaca konten file dan menampilkan tautan unduhan
+    with open(file_path, "rb") as f:
+        pdf_bytes = f.read()
+        st.download_button(label="Unduh PDF", data=pdf_bytes, file_name="form_pendaftaran.pdf", mime="application/pdf")
 
-    # Menampilkan PDF dalam iframe di Streamlit
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
+        # Tampilkan file PDF di dalam Streamlit
+        st.write("### Pratinjau PDF")
+        st.markdown(f'<embed src="data:application/pdf;base64,{base64.b64encode(pdf_bytes).decode()}" width="700" height="1000" type="application/pdf">', unsafe_allow_html=True)
 
 
 def pendaftaran_fans():
@@ -195,11 +195,9 @@ def pendaftaran_fans():
 
     # Menampilkan PDF di Streamlit sebagai gambar
     button = st.checkbox("Tampilkan PDF", value = False)
-    if button and nama and klub :
-        
+    if button:
         pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
         displayPDF(pdf_file)
-        #pdf_viewer(input=pdf_file, render_text=True)
 
 
 def pengunduran_diri_fans():
@@ -224,16 +222,8 @@ def pengunduran_diri_fans():
     # Menampilkan PDF di Streamlit sebagai gambar
     button1 = st.checkbox("Tampilkan PDF ", value = False)
     if button1:
-        pdf_viewer(input=pdf_file, render_text=True)
-        # Simpan ke buffer
-        buffer = save_pdf_to_buffer(pdf_file)
-        # Menampilkan PDF dengan opsi unduh
-        st.download_button(
-            label="Download PDF",
-            data=buffer,
-            file_name=f"{nama}_resignation.pdf",
-            mime="application/pdf"
-        )
+        pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
+        displayPDF(pdf_file)
 
 page1 = st.Page(page=about, title='Tentang Web App')
 page2 = st.Page(page=simulator, title='Simulator Skor')
