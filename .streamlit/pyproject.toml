@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skor-simulator"
+version = "0.1.0"
+description = "A Streamlit app with various dependencies"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
+
+dependencies = [
+    "streamlit",
+    "matplotlib",
+    "pandas",
+    "fpdf",
+    "openpyxl",
+    "Pillow",
+    "wand",
+    "streamlit-pdf-viewer",
+    "PyMuPDF==1.18.19",
+    "pdf2image",
+    "pdfplumber",
+]
+
+[tool.streamlit]
+server.port = 8501
+server.enableCORS = false
+server.enableWebsocketCompression = false
+server.enableXsrfProtection = false

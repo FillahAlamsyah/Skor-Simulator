@@ -240,7 +240,6 @@ def pendaftaran_fans():
         pdf_file = create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")
         displayPDF(pdf_file,jenis="Pendaftaran")
 
-
 def pengunduran_diri_fans():
     st.header('Pengunduran Diri Fans')
     # Input data fans baru dan outputnya berupa pdf dan ditampilkan di streamlit
