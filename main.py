@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import tempfile
 from io import BytesIO
+from PIL import Image
 import io, base64, urllib.request
 from fpdf import FPDF
-from pdf2image import convert_from_bytes
 from streamlit_pdf_viewer import pdf_viewer
 st.set_page_config(page_title='Skor Simulator', page_icon=':soccer:', layout='centered', initial_sidebar_state='expanded')
 
@@ -130,7 +130,7 @@ def simulator():
 
 
 #@st.cache_resource
-def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran"):
+def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")-> bytes:
     text = "Pendaftaran" if jenis == "Pendaftaran" else "Pengunduran Diri"
     pdf = FPDF(format='A4', unit='mm')
     pdf.add_page()
@@ -158,28 +158,78 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran"):
 
     #tanda tangani
     pdf.ln(10)
-    waktu = "Di Tempat, "
+    waktu = "Di Tempat, "+ pd.Timestamp.now().strftime("%d %B %Y")
     pdf.set_x(-pdf.get_string_width(waktu) - 60)
     pdf.cell(0, 10, f"{waktu}", ln=True, align='R')
     pdf.ln(20)
     pdf.set_x(-pdf.get_string_width("TTD") - 60)
     pdf.cell(0, 10, "TTD", ln=True, align='C')
 
-    # Simpan PDF di file sementara
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-    pdf.output(temp_file.name)
-    return temp_file.name
+    
+    # Simpan PDF ke dalam bytes
+    pdf_bytes = pdf.output(dest='S').encode("latin1")
+    return pdf_bytes
 
-def displayPDF(file_path):
-    # Membaca konten file dan menampilkan tautan unduhan
-    with open(file_path, "rb") as f:
-        pdf_bytes = f.read()
-        st.download_button(label="Unduh PDF", data=pdf_bytes, file_name="form_pendaftaran.pdf", mime="application/pdf")
+def displayPDF(pdf_bytes):
+    # Mengonversi PDF ke base64
+    pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
-        # Tampilkan file PDF di dalam Streamlit
-        st.write("### Pratinjau PDF")
-        st.markdown(f'<embed src="data:application/pdf;base64,{base64.b64encode(pdf_bytes).decode()}" width="700" height="1000" type="application/pdf">', unsafe_allow_html=True)
+    # Membuat file HTML untuk menampilkan PDF
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PDF Viewer</title>
+        <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+        <style>
+            #canvasContainer {{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }}
+            canvas {{
+                margin: 5px;
+                border: 1px solid black;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="canvasContainer"></div>
+        <script>
+            const pdfData = "{pdf_base64}";
+            const loadingTask = pdfjsLib.getDocument({{data: atob(pdfData)}});
+            loadingTask.promise.then(pdf => {{
+                const container = document.getElementById('canvasContainer');
+                for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {{
+                    pdf.getPage(pageNumber).then(page => {{
+                        const viewport = page.getViewport({{scale: 1}});
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        container.appendChild(canvas);
+                        const renderContext = {{
+                            canvasContext: context,
+                            viewport: viewport
+                        }};
+                        page.render(renderContext);
+                    }});
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
 
+    # Menyimpan HTML ke file sementara
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as f:
+        f.write(html_content.encode())
+        temp_html_path = f.name
+
+    # Menampilkan HTML di Streamlit
+    st.components.v1.html(open(temp_html_path).read(), height=800)
 
 def pendaftaran_fans():
     st.header('Pendaftaran Fans')
