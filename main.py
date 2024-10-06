@@ -7,7 +7,6 @@ import io, base64, urllib.request
 from fpdf import FPDF
 from streamlit_pdf_viewer import pdf_viewer
 #
-from pdf2image import convert_from_bytes
 st.set_page_config(page_title='Skor Simulator', page_icon=':soccer:', layout='centered', initial_sidebar_state='expanded')
 
 def about():

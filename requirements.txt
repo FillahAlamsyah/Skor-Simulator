@@ -7,3 +7,4 @@ Pillow
 wand
 streamlit-pdf-viewer
 plotly
+pdf2image
