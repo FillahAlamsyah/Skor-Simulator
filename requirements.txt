@@ -1,7 +1,9 @@
 streamlit
+matplotlib
 pandas
 fpdf
 openpyxl
 Pillow
 wand
 streamlit-pdf-viewer
+plotly

@@ -6,6 +6,8 @@ from PIL import Image
 import io, base64, urllib.request
 from fpdf import FPDF
 from streamlit_pdf_viewer import pdf_viewer
+#
+from pdf2image import convert_from_bytes
 st.set_page_config(page_title='Skor Simulator', page_icon=':soccer:', layout='centered', initial_sidebar_state='expanded')
 
 def about():
@@ -136,10 +138,13 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")-> byte
     pdf.add_page()
     # make A4 size paper
     pdf.set_auto_page_break(auto=True, margin=15)
+    # atur margin kiri kanan atas bawah (mm)
+    pdf.set_margins(left=20, top=20, right=20)
 
     #tambahkan logo klub di pojok kiri atas
     path = logo_club(klub)
-    pdf.image(path, x=10, y=8, w=25)
+    #pdf.image(path, x=10, y=8, w=25) 
+    pdf.image(path, x=15, y=10, w=30) 
     # Set font
     pdf.set_font("Arial", "B", 16)
     pdf.cell(200, 25, f"{text} Fans {klub}", ln=True, align="C")
@@ -165,18 +170,18 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")-> byte
     pdf.set_x(-pdf.get_string_width("TTD") - 60)
     pdf.cell(0, 10, "TTD", ln=True, align='C')
 
-    
     # Simpan PDF ke dalam bytes
     pdf_bytes = pdf.output(dest='S').encode("latin1")
     return pdf_bytes
 
-def displayPDF(pdf_bytes,jenis="Pendaftaran"):
+
+def displayPDF(pdf_bytes, jenis="Pendaftaran"):
     text = "Pendaftaran" if jenis == "Pendaftaran" else "Pengunduran Diri"
-    
-    # Convert PDF bytes to base64
+
+    # Mengonversi PDF ke base64
     pdf_base64 = base64.b64encode(pdf_bytes).decode('latin1')
 
-    # Provide download button
+    # Tombol untuk download PDF
     st.download_button(
         label="Download PDF",
         data=pdf_bytes,
@@ -184,42 +189,41 @@ def displayPDF(pdf_bytes,jenis="Pendaftaran"):
         mime="application/pdf",
     )
 
-    # Create Blob URL to display PDF in an iframe
+    # using plotly to display pdf
+    import plotly.express as px
+    fig = px.imshow(Image.open(BytesIO(pdf_bytes)))
+    st.plotly_chart(fig)
+
+    # Membuat konten HTML untuk menampilkan PDF dalam iframe
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; frame-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; media-src *;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PDF Viewer</title>
-        <script>
-            function createPDFBlob() {{
-                var pdfData = atob("{pdf_base64}");
-                var byteArray = new Uint8Array(pdfData.length);
-                for (var i = 0; i < pdfData.length; i++) {{
-                    byteArray[i] = pdfData.charCodeAt(i);
-                }}
-                var blob = new Blob([byteArray], {{ type: 'application/pdf' }});
-                var blobUrl = URL.createObjectURL(blob);
-                document.getElementById('pdfViewer').src = blobUrl;
-            }}
-            window.onload = createPDFBlob;
-        </script>
     </head>
     <body>
-        <iframe id="pdfViewer" width="100%" height="600px"></iframe>
+        <iframe
+            src="data:application/pdf;base64,{pdf_base64}"
+            width="100%"
+            height="600px"
+            type="application/pdf">
+        </iframe>
     </body>
     </html>
     """
 
-    # Write the HTML content to a temporary file
+    # Menyimpan HTML ke file sementara
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as f:
         f.write(html_content.encode('utf-8'))
         temp_html_path = f.name
 
-    # Read and display the HTML content in Streamlit
+    # Membaca dan menampilkan konten HTML di Streamlit
     with open(temp_html_path, 'r', encoding='utf-8') as html_file:
         st.components.v1.html(html_file.read(), height=600)
+
 def pendaftaran_fans():
     st.header('Pendaftaran Fans')
     # Input data fans baru dan outputnya berupa pdf dan ditampilkan di streamlit
