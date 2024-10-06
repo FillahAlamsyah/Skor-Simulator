@@ -172,80 +172,54 @@ def create_form_pdf(nama, umur, email, alasan, klub, jenis="Pendaftaran")-> byte
 
 def displayPDF(pdf_bytes,jenis="Pendaftaran"):
     text = "Pendaftaran" if jenis == "Pendaftaran" else "Pengunduran Diri"
+    
+    # Convert PDF bytes to base64
+    pdf_base64 = base64.b64encode(pdf_bytes).decode('latin1')
 
-    # Mengonversi PDF ke base64
-    pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
-
-    download_button = st.download_button(
+    # Provide download button
+    st.download_button(
         label="Download PDF",
         data=pdf_bytes,
         file_name=f"{text}.pdf",
         mime="application/pdf",
     )
 
-    # Menampilkan PDF di Streamlit sebagai gambar
-    st.markdown(f'<embed src="data:application/pdf;base64,{pdf_base64}" width="100%" height="800" type="application/pdf">',
-                unsafe_allow_html=True)
-
-    # Membuat file HTML untuk menampilkan PDF
+    # Create Blob URL to display PDF in an iframe
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://ssl.gstatic.com data:; frame-src 'self' https://skor-simulator.streamlit.app/; style-src 'self' 'unsafe-inline'; script-src 'self' https://somedomain.com 'unsafe-inline' 'unsafe-eval'; media-src *;">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; frame-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PDF Viewer</title>
-        <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
-        <style>
-            #canvasContainer {{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+        <script>
+            function createPDFBlob() {{
+                var pdfData = atob("{pdf_base64}");
+                var byteArray = new Uint8Array(pdfData.length);
+                for (var i = 0; i < pdfData.length; i++) {{
+                    byteArray[i] = pdfData.charCodeAt(i);
+                }}
+                var blob = new Blob([byteArray], {{ type: 'application/pdf' }});
+                var blobUrl = URL.createObjectURL(blob);
+                document.getElementById('pdfViewer').src = blobUrl;
             }}
-            canvas {{
-                margin: 5px;
-                border: 1px solid black;
-            }}
-        </style>
+            window.onload = createPDFBlob;
+        </script>
     </head>
     <body>
-        <div id="canvasContainer"></div>
-        <script>
-            const pdfData = "{pdf_base64}";
-            const loadingTask = pdfjsLib.getDocument({{data: atob(pdfData)}});
-            loadingTask.promise.then(pdf => {{
-                const container = document.getElementById('canvasContainer');
-                for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {{
-                    pdf.getPage(pageNumber).then(page => {{
-                        const viewport = page.getViewport({{scale: 1}});
-                        const canvas = document.createElement('canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        container.appendChild(canvas);
-                        const renderContext = {{
-                            canvasContext: context,
-                            viewport: viewport
-                        }};
-                        page.render(renderContext);
-                    }});
-                }}
-            }});
-        </script>
+        <iframe id="pdfViewer" width="100%" height="600px"></iframe>
     </body>
     </html>
     """
 
-    # Menyimpan HTML ke file sementara
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as f:
-        f.write(html_content.encode())
+    # Write the HTML content to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as f:
+        f.write(html_content.encode('utf-8'))
         temp_html_path = f.name
 
-    # Menampilkan HTML di Streamlit
-    st.components.v1.html(open(temp_html_path).read(), height=800)
-
+    # Read and display the HTML content in Streamlit
+    with open(temp_html_path, 'r', encoding='utf-8') as html_file:
+        st.components.v1.html(html_file.read(), height=600)
 def pendaftaran_fans():
     st.header('Pendaftaran Fans')
     # Input data fans baru dan outputnya berupa pdf dan ditampilkan di streamlit
