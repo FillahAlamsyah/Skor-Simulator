@@ -4,4 +4,3 @@ fpdf
 streamlit_pdf_viewer
 pdf2image
 openpyxl
-urllib
